@@ -7,12 +7,18 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3") ## does this work? - palash
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  sensor_msgs
   cv_bridge
   image_transport
   message_generation
+  roscpp
+  sensor_msgs
 )
+
+find_package(Eigen3 REQUIRED)
+# Eigen 3.2 (Wily) only provides EIGEN3_INCLUDE_DIR, not EIGEN3_INCLUDE_DIRS
+if(NOT EIGEN3_INCLUDE_DIRS)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+endif()
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -56,10 +62,7 @@ add_message_files(
 
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  sensor_msgs
-)
+generate_messages()
 
 ###################################
 ## catkin specific configuration ##
@@ -73,8 +76,8 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES april_tag
-  CATKIN_DEPENDS roscpp sensor_msgs message_runtime
-  DEPENDS eigen3
+  CATKIN_DEPENDS cv_bridge image_transport message_runtime roscpp sensor_msgs
+  DEPENDS EIGEN3
 )
 
 ###########
@@ -85,7 +88,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 
 
-include_directories(include /usr/include/eigen3)
+include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 
 #include_directories(
@@ -106,11 +109,12 @@ add_executable(april_tag_node src/april_tag_node.cpp ${SOURCE_FILES})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(april_tag_node april_tag_generate_messages_cpp)
+add_dependencies(april_tag_node april_tag_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(april_tag_node
   ${catkin_LIBRARIES}
+  ${EIGEN3_LIBRARIES}
 )
 
 #############

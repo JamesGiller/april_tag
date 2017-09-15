@@ -45,63 +45,62 @@ void wRo_to_euler(const Eigen::Matrix3d& wRo, double& yaw, double& pitch, double
 
 class AprilTagNode
 {
-  ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
   image_transport::Publisher image_pub_;
   ros::Publisher tag_list_pub;
-  AprilTags::TagDetector* tag_detector;
+  AprilTags::TagDetector tag_detector;
 
   // allow configurations for these:  
-  AprilTags::TagCodes tag_codes;
-  double camera_focal_length_x; // in pixels. late 2013 macbookpro retina = 700
-  double camera_focal_length_y; // in pixels
-  double tag_size; // tag side length of frame in meters 
-  bool  show_debug_image;
+  double camera_focal_length_x_px_; // late 2013 macbookpro retina = 700, 700
+  double camera_focal_length_y_px_;
+  double camera_principal_point_x_px_; // 640x480 image = 320, 240 (middle)
+  double camera_principal_point_y_px_;
+  double tag_size_m_;
+  bool  show_debug_image_;
 
 public:
-  AprilTagNode() : 
-    it_(nh_), 
-    tag_codes(AprilTags::tagCodes36h11), 
-    tag_detector(NULL),
-    camera_focal_length_y(700),
-    camera_focal_length_x(700),
-    tag_size(0.029), // 1 1/8in marker = 0.029m
-    show_debug_image(false)
+  AprilTagNode(ros::NodeHandle &nh, const AprilTags::TagCodes &tag_codes) : 
+    it_(nh), 
+    tag_detector(tag_codes)
   {
     // Subscrive to input video feed and publish output video feed
     image_sub_ = it_.subscribe("/camera/image_raw", 1, &AprilTagNode::imageCb, this);
     image_pub_ = it_.advertise("/april_tag_debug/output_video", 1);
-    tag_list_pub = nh_.advertise<april_tag::AprilTagList>("/april_tags", 100);
+    tag_list_pub = nh.advertise<april_tag::AprilTagList>("/april_tags", 100);
 
     // Use a private node handle so that multiple instances of the node can
     // be run simultaneously while using different parameters.
     ros::NodeHandle private_node_handle("~"); 
-    private_node_handle.param<double>("focal_length_px", camera_focal_length_x, 700.0);
-    private_node_handle.param<double>("tag_size_cm", tag_size, 2.9);
-    private_node_handle.param<bool>("show_debug_image", show_debug_image, false);
+    private_node_handle.param<double>("focal_length_x_px", camera_focal_length_x_px_, 700.0);
+    private_node_handle.param<double>("focal_length_y_px", camera_focal_length_y_px_, 700.0);
+    private_node_handle.param<double>("principal_point_x_px_", camera_principal_point_x_px_, 320.0);
+    private_node_handle.param<double>("principal_point_y_px_", camera_principal_point_y_px_, 240.0);
 
-    camera_focal_length_y = camera_focal_length_x; // meh
-    tag_size = tag_size / 100.0; // library takes input in meters
+    private_node_handle.param<bool>("show_debug_image", show_debug_image_, false);
+
+    double tag_size_cm;
+    private_node_handle.param<double>("tag_size_cm", tag_size_cm, 2.9);
+    tag_size_m_ = tag_size_cm / 100.0;
 
 
-    cout << "got focal length " << camera_focal_length_x << endl;
-    cout << "got tag size " << tag_size << endl;
-    tag_detector = new AprilTags::TagDetector(tag_codes);
-    if (show_debug_image) {
+    cout << "got focal length " << camera_focal_length_x_px_ << ", " << camera_focal_length_y_px_ << endl;
+    cout << "got principal point " << camera_principal_point_x_px_ << ", " << camera_principal_point_y_px_ << endl;
+    cout << "got tag size (in meters) " << tag_size_m_ << endl;
+
+    if (show_debug_image_) {
       cv::namedWindow(OPENCV_WINDOW);
     }
-
   }
 
   ~AprilTagNode()
   {
-    if (show_debug_image) {
+    if (show_debug_image_) {
      cv::destroyWindow(OPENCV_WINDOW);
     }
   }
 
-  april_tag::AprilTag convert_to_msg(AprilTags::TagDetection& detection, int width, int height) {
+  april_tag::AprilTag convert_to_msg(AprilTags::TagDetection& detection) {
     // recovering the relative pose of a tag:
 
     // NOTE: for this to be accurate, it is necessary to use the
@@ -110,11 +109,11 @@ public:
 
     Eigen::Vector3d translation;
     Eigen::Matrix3d rotation;
-    detection.getRelativeTranslationRotation(tag_size, 
-                                             camera_focal_length_x, 
-                                             camera_focal_length_y, 
-                                             width / 2, 
-                                             height / 2,
+    detection.getRelativeTranslationRotation(tag_size_m_, 
+                                             camera_focal_length_x_px_, 
+                                             camera_focal_length_y_px_, 
+                                             camera_principal_point_x_px_, 
+                                             camera_principal_point_y_px_,
                                              translation, 
                                              rotation);
 
@@ -147,12 +146,12 @@ public:
   {
     cv::Mat image_gray;
     cv::cvtColor(cv_ptr->image, image_gray, CV_BGR2GRAY);
-    vector<AprilTags::TagDetection> detections = tag_detector->extractTags(image_gray);
+    vector<AprilTags::TagDetection> detections = tag_detector.extractTags(image_gray);
     vector<april_tag::AprilTag> tag_msgs;
 
     for (int i=0; i<detections.size(); i++) {
       detections[i].draw(cv_ptr->image);
-      tag_msgs.push_back(convert_to_msg(detections[i], cv_ptr->image.cols, cv_ptr->image.rows));
+      tag_msgs.push_back(convert_to_msg(detections[i]));
     }
 
     if(detections.size() > 0) { // take this out if you want absence notificaiton
@@ -178,7 +177,7 @@ public:
 
     processCvImage(cv_ptr);
 
-    if (show_debug_image) {
+    if (show_debug_image_) {
       // Update GUI Window
       cv::imshow(OPENCV_WINDOW, cv_ptr->image);
       cv::waitKey(3);
@@ -192,7 +191,8 @@ public:
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "april_tag_node");
-  AprilTagNode atn;
+  ros::NodeHandle nh;
+  AprilTagNode atn(nh, AprilTags::tagCodes36h11);
   ros::spin();
   return 0;
 }

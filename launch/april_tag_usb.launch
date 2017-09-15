@@ -1,17 +1,20 @@
 <launch>
-	<param name="/usb_cam/pixel_format" value="yuyv"/>
+	<param name="/usb_cam/pixel_format" value="yuyv" />
 
-	<node pkg="usb_cam" name="usb_cam" type="usb_cam_node"/>
+	<node pkg="usb_cam" name="usb_cam" type="usb_cam_node" />
 
 	<node pkg="april_tag" name="april_tag_node" type="april_tag_node">
-		<remap from="/camera/image_raw" to="/usb_cam/image_raw"/>
+		<remap from="/camera/image_raw" to="/usb_cam/image_raw" />
 
-		<!-- focal_length_px: camera focal length in pixels. 
-		700 works well forlate 2013 macbook pro retina 13in -->
-		<param name="focal_length_px" value="700"/>
+    <!-- Parameters from AprilCal calibration -->
+		<param name="focal_length_x_px" value="612.912288" />
+		<param name="focal_length_y_px" value="610.781868" />
+		<param name="principal_point_x_px" value="313.542021" />
+		<param name="principal_point_y_px" value="227.436308" />
 		
 		<!-- tag_size_cm: size of edge of the black frame in cms -->
-		<param name="tag_size_cm" value="2.9"/> 
+		<param name="tag_size_cm" value="5.9" /> 
+		<param name="show_debug_image" value="true" />
 	</node>
 
 </launch>
