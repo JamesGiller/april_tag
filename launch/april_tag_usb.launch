@@ -1,7 +1,12 @@
 <launch>
-	<param name="/usb_cam/pixel_format" value="yuyv" />
-
-	<node pkg="usb_cam" name="usb_cam" type="usb_cam_node" />
+	<node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen">
+    <param name="video_device" value="/dev/video0" />
+    <param name="image_width" value="640" />
+    <param name="image_height" value="480" />
+    <param name="pixel_format" value="yuyv" />
+    <param name="camera_frame_id" value="usb_cam" />
+    <param name="io_method" value="mmap"/>
+  </node>
 
 	<node pkg="april_tag" name="april_tag_node" type="april_tag_node">
 		<remap from="/camera/image_raw" to="/usb_cam/image_raw" />

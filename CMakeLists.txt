@@ -8,10 +8,12 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3") ## does this work? - palash
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
+  geometry_msgs
   image_transport
   message_generation
   roscpp
   sensor_msgs
+  tf
 )
 
 find_package(Eigen3 REQUIRED)
@@ -62,7 +64,7 @@ add_message_files(
 
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages()
+generate_messages(DEPENDENCIES geometry_msgs)
 
 ###################################
 ## catkin specific configuration ##
@@ -76,7 +78,7 @@ generate_messages()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES april_tag
-  CATKIN_DEPENDS cv_bridge image_transport message_runtime roscpp sensor_msgs
+  CATKIN_DEPENDS cv_bridge geometry_msgs image_transport message_runtime roscpp sensor_msgs
   DEPENDS EIGEN3
 )
 
