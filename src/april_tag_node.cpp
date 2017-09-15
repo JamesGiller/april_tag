@@ -87,7 +87,7 @@ public:
     private_node_handle.param<double>("principal_point_y_px_", camera_principal_point_y_px_, 240.0);
 
     double tag_size_cm;
-    private_node_handle.param<double>("tag_size_cm", tag_size_cm, 2.9);
+    nh.param<double>("tag_size_cm", tag_size_cm, 5.9);
     tag_size_m_ = tag_size_cm / 100.0;
 
 
