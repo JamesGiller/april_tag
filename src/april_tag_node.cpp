@@ -92,8 +92,8 @@ public:
 
     private_node_handle.param<double>("focal_length_x_px", camera_focal_length_x_px_, -1.);
     private_node_handle.param<double>("focal_length_y_px", camera_focal_length_y_px_, -1.);
-    private_node_handle.param<double>("principal_point_x_px_", camera_principal_point_x_px_, -1.);
-    private_node_handle.param<double>("principal_point_y_px_", camera_principal_point_y_px_, -1.);
+    private_node_handle.param<double>("principal_point_x_px", camera_principal_point_x_px_, -1.);
+    private_node_handle.param<double>("principal_point_y_px", camera_principal_point_y_px_, -1.);
 
     if(camera_focal_length_x_px_ < 0. || camera_focal_length_y_px_ < 0.
        || camera_principal_point_x_px_ < 0. || camera_principal_point_y_px_ < 0.)
@@ -105,20 +105,19 @@ public:
         ROS_INFO("Interrupted by node shutdown.");
         exit(0);
       }
-      /* sensor_msgs/CameraInfo only describes contents of intrinsic camera matrix in comments in msg file, so
-         there is no point having named constants here, sorry. */
       if(std::all_of(camera_info->K.begin(), camera_info->K.end(), [](double k) { return k == 0;}))
       {
         ROS_WARN("Intrinsics of CameraInfo fetched from topic '%s/camera_info' are all zero."
                  " Make sure your camera publishes the correct intrinsics", camera_ns.c_str());
       }
+      /* sensor_msgs/CameraInfo only describes contents of intrinsic camera matrix in comments in msg file, so
+         there is no point having named constants here, sorry. */
       camera_focal_length_x_px_ = camera_info->K[0];
       camera_focal_length_y_px_ = camera_info->K[4];
       camera_principal_point_x_px_ = camera_info->K[2];
       camera_principal_point_y_px_ = camera_info->K[5];
     }
 
-    ROS_INFO_STREAM("got tag size " << tag_size_m_ << "m");
     ROS_INFO_STREAM("got focal length " << camera_focal_length_x_px_ << ", " << camera_focal_length_y_px_);
     ROS_INFO_STREAM("got principal point " << camera_principal_point_x_px_ << ", " << camera_principal_point_y_px_);
 
