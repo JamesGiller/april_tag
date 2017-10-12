@@ -102,7 +102,7 @@ include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 #   src/${PROJECT_NAME}/april_tag.cpp
 # )
 
-file(GLOB SOURCE_FILES "src/apriltags/*.cc")
+file(GLOB SOURCE_FILES "src/AprilTags/*.cc")
 
 
 ## Declare a cpp executable
