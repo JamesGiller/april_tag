@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(april_tag)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3") ## does this work? - palash
+add_definitions(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
