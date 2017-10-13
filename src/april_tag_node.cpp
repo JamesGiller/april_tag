@@ -17,7 +17,7 @@
 class AprilTagNode
 {
 public:
-  AprilTagNode(ros::NodeHandle &nh, const AprilTags::TagCodes &tag_codes) : 
+  AprilTagNode(ros::NodeHandle &nh, ros::NodeHandle &private_nh, const AprilTags::TagCodes &tag_codes) :
     detect_tags_(tag_codes),
     it_(nh) 
   {
@@ -29,22 +29,21 @@ public:
     }
     detection_context_.tag_size_m = tag_size_cm / 100.0;
 
-    ros::NodeHandle private_node_handle("~");
 
     std::string camera_ns;
-    if(!private_node_handle.getParam("camera_ns", camera_ns))
+    if(!private_nh.getParam("camera_ns", camera_ns))
     {
       ROS_ERROR("Parameter 'camera_ns' is required but not set");
       exit(1);
     }
 
-    private_node_handle.param<double>("focal_length_x_px", detection_context_.camera_focal_length_x_px, -1.);
-    private_node_handle.param<double>("focal_length_y_px", detection_context_.camera_focal_length_y_px, -1.);
-    private_node_handle.param<double>("principal_point_x_px", detection_context_.camera_principal_point_x_px, -1.);
-    private_node_handle.param<double>("principal_point_y_px", detection_context_.camera_principal_point_y_px, -1.);
+    double fx, fy, cx, cy;
+    private_nh.param<double>("focal_length_x_px", fx, -1.);
+    private_nh.param<double>("focal_length_y_px", fy, -1.);
+    private_nh.param<double>("principal_point_x_px", cx, -1.);
+    private_nh.param<double>("principal_point_y_px", cy, -1.);
 
-    if(detection_context_.camera_focal_length_x_px < 0. || detection_context_.camera_focal_length_y_px < 0.
-       || detection_context_.camera_principal_point_x_px < 0. || detection_context_.camera_principal_point_y_px < 0.)
+    if(fx < 0. || fy < 0. || cx < 0. || cy < 0.)
     {
       ROS_INFO("Camera intrinsics not supplied. Waiting to fetch from topic '%s/camera_info'", camera_ns.c_str());
       auto camera_info = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_ns + "/camera_info", nh);
@@ -58,15 +57,14 @@ public:
         ROS_WARN("Intrinsics of CameraInfo fetched from topic '%s/camera_info' are all zero."
                  " Make sure your camera publishes the correct intrinsics", camera_ns.c_str());
       }
-      /* sensor_msgs/CameraInfo only describes contents of intrinsic camera matrix in comments in msg file, so
-         there is no point having named constants here, sorry. */
-      detection_context_.camera_focal_length_x_px = camera_info->K[0];
-      detection_context_.camera_focal_length_y_px = camera_info->K[4];
-      detection_context_.camera_principal_point_x_px = camera_info->K[2];
-      detection_context_.camera_principal_point_y_px = camera_info->K[5];
+      detection_context_.setIntrinsicsFromCameraInfo(*camera_info);
+    }
+    else
+    {
+      detection_context_.setCameraIntrinsics(fx, fy, cx, cy);
     }
 
-    image_sub_ = it_.subscribe(camera_ns + "/image_raw", 1, &AprilTagNode::detectAndPublishTags, this);
+    image_sub_ = it_.subscribe("camera/image_raw", 1, &AprilTagNode::detectAndPublishTags, this);
     tag_list_pub_ = nh.advertise<april_tag::AprilTagList>("/april_tags", 100);
   }
 
@@ -103,7 +101,8 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "april_tag_node");
   ros::NodeHandle nh;
-  AprilTagNode atn(nh, AprilTags::tagCodes36h11);
+  ros::NodeHandle private_nh("~");
+  AprilTagNode atn(nh, private_nh, AprilTags::tagCodes36h11);
   ros::spin();
   return 0;
 }
