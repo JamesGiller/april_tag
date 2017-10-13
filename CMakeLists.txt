@@ -106,6 +106,7 @@ target_link_libraries(AprilTags
 add_library(april_tag_ros
   src/detect_tags_in_ros_image.cpp
   src/tag_detection_to_msg.cpp
+  src/tag_publisher.cpp
 )
 
 target_link_libraries(april_tag_ros

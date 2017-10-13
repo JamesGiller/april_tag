@@ -1,67 +1,11 @@
 //
 // adapted from ros example and april tag examples - palash
 //
-#include <algorithm>
-#include <functional>
-#include <iterator>
 
-#include <image_transport/image_transport.h>
 #include <ros/ros.h>
-#include <sensor_msgs/CameraInfo.h>
 
-#include "april_tag/detect_tags_in_ros_image.h"
-#include "april_tag/tag_detection_to_msg.h"
-#include "april_tag/AprilTagList.h"
+#include "april_tag/tag_publisher.h"
 #include "AprilTags/Tag36h11.h"
-
-class AprilTagNode
-{
-public:
-  /**
-   * @brief this will subscribe to 'camera/image_raw' topic and publish detected tags to '/april_tags'
-   *
-   *        You should remap these topic names.
-   * @param nh
-   * @param tag_codes family of tags that should be detected
-   * @param base_context all members should be initialized except DetectionContext::time_and_place
-   */
-  AprilTagNode(ros::NodeHandle &nh, const AprilTags::TagCodes &tag_codes, april_tag::DetectionContext base_context) :
-    detection_context_{base_context},
-    detect_tags_{tag_codes},
-    it_{nh}
-  {
-    tag_list_pub_ = nh.advertise<april_tag::AprilTagList>("/april_tags", 100);
-    image_sub_ = it_.subscribe("camera/image_raw", 1, &AprilTagNode::detectAndPublishTags_, this);
-  }
-
-private:
-  void detectAndPublishTags_(const sensor_msgs::ImageConstPtr &msg)
-  {
-    try
-    {
-      auto detections = detect_tags_(msg);
-
-      if(detections.size() > 0)
-      {
-        detection_context_.time_and_place = msg->header;
-        april_tag::AprilTagList tag_list;
-        std::transform(detections.begin(), detections.end(), std::back_inserter(tag_list.april_tags),
-                       std::bind(april_tag::tagDetectionToMsg, std::placeholders::_1, detection_context_));
-        tag_list_pub_.publish(tag_list);
-      }
-    }
-    catch (const std::runtime_error& e)
-    {
-      ROS_ERROR("%s", e.what());
-    }
-  }
-
-  april_tag::DetectionContext detection_context_;
-  april_tag::DetectTagsInROSImage detect_tags_;
-  image_transport::ImageTransport it_;
-  ros::Publisher tag_list_pub_;
-  image_transport::Subscriber image_sub_;
-};
 
 int main(int argc, char** argv)
 {
@@ -114,7 +58,11 @@ int main(int argc, char** argv)
     detection_context.setCameraIntrinsics(fx, fy, cx, cy);
   }
 
-  AprilTagNode atn(nh, AprilTags::tagCodes36h11, std::move(detection_context));
+  april_tag::TagPublisher tag_publisher(nh, AprilTags::tagCodes36h11, std::move(detection_context),
+                                        [](std::string what) -> void
+  {
+    ROS_ERROR("Error: %s", what.c_str());
+  });
   ros::spin();
   return 0;
 }
