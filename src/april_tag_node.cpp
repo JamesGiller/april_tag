@@ -17,58 +17,25 @@
 class AprilTagNode
 {
 public:
-  AprilTagNode(ros::NodeHandle &nh, ros::NodeHandle &private_nh, const AprilTags::TagCodes &tag_codes) :
-    detect_tags_(tag_codes),
-    it_(nh) 
+  /**
+   * @brief this will subscribe to 'camera/image_raw' topic and publish detected tags to '/april_tags'
+   *
+   *        You should remap these topic names.
+   * @param nh
+   * @param tag_codes family of tags that should be detected
+   * @param base_context all members should be initialized except DetectionContext::time_and_place
+   */
+  AprilTagNode(ros::NodeHandle &nh, const AprilTags::TagCodes &tag_codes, april_tag::DetectionContext base_context) :
+    detection_context_{base_context},
+    detect_tags_{tag_codes},
+    it_{nh}
   {
-    double tag_size_cm;
-    if(!nh.getParam("tag_size_cm", tag_size_cm))
-    {
-      ROS_ERROR("Parameter 'tag_size_cm' is required but not set");
-      exit(1);
-    }
-    detection_context_.tag_size_m = tag_size_cm / 100.0;
-
-
-    std::string camera_ns;
-    if(!private_nh.getParam("camera_ns", camera_ns))
-    {
-      ROS_ERROR("Parameter 'camera_ns' is required but not set");
-      exit(1);
-    }
-
-    double fx, fy, cx, cy;
-    private_nh.param<double>("focal_length_x_px", fx, -1.);
-    private_nh.param<double>("focal_length_y_px", fy, -1.);
-    private_nh.param<double>("principal_point_x_px", cx, -1.);
-    private_nh.param<double>("principal_point_y_px", cy, -1.);
-
-    if(fx < 0. || fy < 0. || cx < 0. || cy < 0.)
-    {
-      ROS_INFO("Camera intrinsics not supplied. Waiting to fetch from topic '%s/camera_info'", camera_ns.c_str());
-      auto camera_info = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_ns + "/camera_info", nh);
-      if(!camera_info)
-      {
-        ROS_INFO("Interrupted by node shutdown.");
-        exit(0);
-      }
-      if(std::all_of(camera_info->K.begin(), camera_info->K.end(), [](double k) { return k == 0;}))
-      {
-        ROS_WARN("Intrinsics of CameraInfo fetched from topic '%s/camera_info' are all zero."
-                 " Make sure your camera publishes the correct intrinsics", camera_ns.c_str());
-      }
-      detection_context_.setIntrinsicsFromCameraInfo(*camera_info);
-    }
-    else
-    {
-      detection_context_.setCameraIntrinsics(fx, fy, cx, cy);
-    }
-
-    image_sub_ = it_.subscribe("camera/image_raw", 1, &AprilTagNode::detectAndPublishTags, this);
     tag_list_pub_ = nh.advertise<april_tag::AprilTagList>("/april_tags", 100);
+    image_sub_ = it_.subscribe("camera/image_raw", 1, &AprilTagNode::detectAndPublishTags_, this);
   }
 
-  void detectAndPublishTags(const sensor_msgs::ImageConstPtr &msg)
+private:
+  void detectAndPublishTags_(const sensor_msgs::ImageConstPtr &msg)
   {
     try
     {
@@ -89,12 +56,11 @@ public:
     }
   }
 
-private:
   april_tag::DetectionContext detection_context_;
   april_tag::DetectTagsInROSImage detect_tags_;
-  image_transport::Subscriber image_sub_;
   image_transport::ImageTransport it_;
   ros::Publisher tag_list_pub_;
+  image_transport::Subscriber image_sub_;
 };
 
 int main(int argc, char** argv)
@@ -102,7 +68,53 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "april_tag_node");
   ros::NodeHandle nh;
   ros::NodeHandle private_nh("~");
-  AprilTagNode atn(nh, private_nh, AprilTags::tagCodes36h11);
+
+  april_tag::DetectionContext detection_context;
+
+  double tag_size_cm;
+  if(!nh.getParam("tag_size_cm", tag_size_cm))
+  {
+    ROS_ERROR("Parameter 'tag_size_cm' is required but not set");
+    exit(1);
+  }
+  detection_context.tag_size_m = tag_size_cm / 100.0;
+
+
+  std::string camera_ns;
+  if(!private_nh.getParam("camera_ns", camera_ns))
+  {
+    ROS_ERROR("Parameter 'camera_ns' is required but not set");
+    exit(1);
+  }
+
+  double fx, fy, cx, cy;
+  private_nh.param<double>("focal_length_x_px", fx, -1.);
+  private_nh.param<double>("focal_length_y_px", fy, -1.);
+  private_nh.param<double>("principal_point_x_px", cx, -1.);
+  private_nh.param<double>("principal_point_y_px", cy, -1.);
+
+  if(fx < 0. || fy < 0. || cx < 0. || cy < 0.)
+  {
+    ROS_INFO("Camera intrinsics not supplied. Waiting to fetch from topic '%s/camera_info'", camera_ns.c_str());
+    auto camera_info = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_ns + "/camera_info", nh);
+    if(!camera_info)
+    {
+      ROS_INFO("Interrupted by node shutdown.");
+      exit(0);
+    }
+    if(std::all_of(camera_info->K.begin(), camera_info->K.end(), [](double k) { return k == 0;}))
+    {
+      ROS_WARN("Intrinsics of CameraInfo fetched from topic '%s/camera_info' are all zero."
+               " Make sure your camera publishes the correct intrinsics", camera_ns.c_str());
+    }
+    detection_context.setIntrinsicsFromCameraInfo(*camera_info);
+  }
+  else
+  {
+    detection_context.setCameraIntrinsics(fx, fy, cx, cy);
+  }
+
+  AprilTagNode atn(nh, AprilTags::tagCodes36h11, std::move(detection_context));
   ros::spin();
   return 0;
 }
