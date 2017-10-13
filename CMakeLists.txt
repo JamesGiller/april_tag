@@ -92,22 +92,30 @@ catkin_package(
 
 include_directories(include ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
-
-#include_directories(
-#  ${catkin_INCLUDE_DIRS}
-#)
-
-## Declare a cpp library
-# add_library(april_tag
-#   src/${PROJECT_NAME}/april_tag.cpp
-# )
-
 file(GLOB SOURCE_FILES "src/AprilTags/*.cc")
 
+add_library(AprilTags
+    ${SOURCE_FILES}
+)
+
+target_link_libraries(AprilTags
+    ${EIGEN3_LIBRARIES}
+)
+
+## Declare a cpp library
+add_library(april_tag_ros
+  src/tag_detection_to_msg.cpp
+)
+
+target_link_libraries(april_tag_ros
+    AprilTags
+    ${catkin_LIBRARIES}
+    ${EIGEN3_LIBRARIES}
+)
 
 ## Declare a cpp executable
 
-add_executable(april_tag_node src/april_tag_node.cpp ${SOURCE_FILES})
+add_executable(april_tag_node src/april_tag_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -115,6 +123,8 @@ add_dependencies(april_tag_node april_tag_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(april_tag_node
+  AprilTags
+  april_tag_ros
   ${catkin_LIBRARIES}
   ${EIGEN3_LIBRARIES}
 )

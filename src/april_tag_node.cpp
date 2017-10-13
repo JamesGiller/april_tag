@@ -1,8 +1,6 @@
 //
 // adapted from ros example and april tag examples - palash
 //
-#include <cmath>
-
 #include <algorithm>
 
 #include <cv_bridge/cv_bridge.h>
@@ -10,45 +8,15 @@
 #include <ros/ros.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/image_encodings.h>
-#include <tf/transform_datatypes.h>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "april_tag/tag_detection_to_msg.h"
 #include "april_tag/AprilTag.h" // rosmsg
 #include "april_tag/AprilTagList.h" // rosmsg
 #include "AprilTags/TagDetector.h"
 #include "AprilTags/Tag36h11.h"
-
-namespace
-{
-  const double PI  = 3.14159265358979;
-  const double TAU = 6.28318530717958;
-  const double NEG_TAU = -6.28318530717958;
-
-  /**
-   * Normalize angle to be within the interval [-pi,pi].
-   */
-  inline double standardRad(double t) {
-    if (t >= 0.) {
-      t = std::fmod(t+PI, TAU) - PI;
-    } else {
-      t = std::fmod(t-PI, NEG_TAU) + PI;
-    }
-    return t;
-  }
-
-  /**
-  * Convert rotation matrix to Euler angles
-  */
-  void rotationMatToEuler(const Eigen::Matrix3d &wRo, double &yaw, double &pitch, double &roll) {
-    yaw = standardRad(std::atan2(wRo(1,0), wRo(0,0)));
-    double c = std::cos(yaw);
-    double s = std::sin(yaw);
-    pitch = standardRad(std::atan2(-wRo(2,0), wRo(0,0)*c + wRo(1,0)*s));
-    roll  = standardRad(std::atan2(wRo(0,2)*s - wRo(1,2)*c, -wRo(0,1)*s + wRo(1,1)*c));
-  }
-}
 
 class AprilTagNode
 {
@@ -142,34 +110,11 @@ public:
   }
 
   april_tag::AprilTag convert_to_msg(AprilTags::TagDetection &detection) {
-    Eigen::Matrix4d transformation_matrix = detection.getRelativeTransform(tag_size_m_, 
-                                                                           camera_focal_length_x_px_, 
-                                                                           camera_focal_length_y_px_, 
-                                                                           camera_principal_point_x_px_, 
-                                                                           camera_principal_point_y_px_);
-    Eigen::Vector3d translation = transformation_matrix.col(3).head(3);
-    Eigen::Matrix3d rotation = transformation_matrix.block(0, 0, 3, 3);
-
-    Eigen::Matrix3d F;
-    F <<
-      1, 0,  0,
-      0,  -1,  0,
-      0,  0,  1;
-    Eigen::Matrix3d fixed_rot = F * rotation;
-
-    april_tag::AprilTag tag_msg;
-    tag_msg.id = detection.id;
-    tag_msg.hamming_distance = detection.hammingDistance;
-    tag_msg.distance = translation.norm();
-    tag_msg.stamped.header.stamp = latest_image_->header.stamp;
-    tag_msg.stamped.header.frame_id = latest_image_->header.frame_id;
-    tag_msg.stamped.pose.position.x = translation(0); 
-    tag_msg.stamped.pose.position.y = translation(1); 
-    tag_msg.stamped.pose.position.z = translation(2); 
-    double roll, pitch, yaw;
-    rotationMatToEuler(fixed_rot, yaw, pitch, roll);
-    tag_msg.stamped.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll, pitch, yaw);
-    return tag_msg;
+    april_tag::DetectionContext detection_context = {latest_image_->header,
+                                                     camera_focal_length_x_px_, camera_focal_length_y_px_,
+                                                     camera_principal_point_x_px_, camera_principal_point_y_px_,
+                                                     tag_size_m_};
+    return april_tag::tagDetectionToMsg(detection, detection_context);
   }
 
   void processCvImage(cv_bridge::CvImagePtr cv_ptr) 
