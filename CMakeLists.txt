@@ -104,6 +104,7 @@ target_link_libraries(AprilTags
 
 ## Declare a cpp library
 add_library(april_tag_ros
+  src/detect_tags_in_ros_image.cpp
   src/tag_detection_to_msg.cpp
 )
 
