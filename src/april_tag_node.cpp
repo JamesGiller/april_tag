@@ -16,18 +16,6 @@
 
 class AprilTagNode
 {
-  // allow configurations for these:  
-  double camera_focal_length_x_px_;
-  double camera_focal_length_y_px_;
-  double camera_principal_point_x_px_;
-  double camera_principal_point_y_px_;
-  double tag_size_m_;
-
-  april_tag::DetectTagsInROSImage detect_tags_;
-  image_transport::ImageTransport it_;
-  image_transport::Subscriber image_sub_;
-  ros::Publisher tag_list_pub_;
-  
 public:
   AprilTagNode(ros::NodeHandle &nh, const AprilTags::TagCodes &tag_codes) : 
     detect_tags_(tag_codes),
@@ -39,7 +27,7 @@ public:
       ROS_ERROR("Parameter 'tag_size_cm' is required but not set");
       exit(1);
     }
-    tag_size_m_ = tag_size_cm / 100.0;
+    detection_context_.tag_size_m = tag_size_cm / 100.0;
 
     ros::NodeHandle private_node_handle("~");
 
@@ -50,13 +38,13 @@ public:
       exit(1);
     }
 
-    private_node_handle.param<double>("focal_length_x_px", camera_focal_length_x_px_, -1.);
-    private_node_handle.param<double>("focal_length_y_px", camera_focal_length_y_px_, -1.);
-    private_node_handle.param<double>("principal_point_x_px", camera_principal_point_x_px_, -1.);
-    private_node_handle.param<double>("principal_point_y_px", camera_principal_point_y_px_, -1.);
+    private_node_handle.param<double>("focal_length_x_px", detection_context_.camera_focal_length_x_px, -1.);
+    private_node_handle.param<double>("focal_length_y_px", detection_context_.camera_focal_length_y_px, -1.);
+    private_node_handle.param<double>("principal_point_x_px", detection_context_.camera_principal_point_x_px, -1.);
+    private_node_handle.param<double>("principal_point_y_px", detection_context_.camera_principal_point_y_px, -1.);
 
-    if(camera_focal_length_x_px_ < 0. || camera_focal_length_y_px_ < 0.
-       || camera_principal_point_x_px_ < 0. || camera_principal_point_y_px_ < 0.)
+    if(detection_context_.camera_focal_length_x_px < 0. || detection_context_.camera_focal_length_y_px < 0.
+       || detection_context_.camera_principal_point_x_px < 0. || detection_context_.camera_principal_point_y_px < 0.)
     {
       ROS_INFO("Camera intrinsics not supplied. Waiting to fetch from topic '%s/camera_info'", camera_ns.c_str());
       auto camera_info = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_ns + "/camera_info", nh);
@@ -72,29 +60,17 @@ public:
       }
       /* sensor_msgs/CameraInfo only describes contents of intrinsic camera matrix in comments in msg file, so
          there is no point having named constants here, sorry. */
-      camera_focal_length_x_px_ = camera_info->K[0];
-      camera_focal_length_y_px_ = camera_info->K[4];
-      camera_principal_point_x_px_ = camera_info->K[2];
-      camera_principal_point_y_px_ = camera_info->K[5];
+      detection_context_.camera_focal_length_x_px = camera_info->K[0];
+      detection_context_.camera_focal_length_y_px = camera_info->K[4];
+      detection_context_.camera_principal_point_x_px = camera_info->K[2];
+      detection_context_.camera_principal_point_y_px = camera_info->K[5];
     }
 
-    ROS_INFO_STREAM("got focal length " << camera_focal_length_x_px_ << ", " << camera_focal_length_y_px_);
-    ROS_INFO_STREAM("got principal point " << camera_principal_point_x_px_ << ", " << camera_principal_point_y_px_);
-
-    image_sub_ = it_.subscribe(camera_ns + "/image_raw", 1, &AprilTagNode::imageCb, this);
+    image_sub_ = it_.subscribe(camera_ns + "/image_raw", 1, &AprilTagNode::detectAndPublishTags, this);
     tag_list_pub_ = nh.advertise<april_tag::AprilTagList>("/april_tags", 100);
   }
 
-  april_tag::AprilTag convertToMsg(const AprilTags::TagDetection &detection, const sensor_msgs::ImageConstPtr &in_img)
-  {
-    april_tag::DetectionContext detection_context = {in_img->header,
-                                                     camera_focal_length_x_px_, camera_focal_length_y_px_,
-                                                     camera_principal_point_x_px_, camera_principal_point_y_px_,
-                                                     tag_size_m_};
-    return april_tag::tagDetectionToMsg(detection, detection_context);
-  }
-
-  void imageCb(const sensor_msgs::ImageConstPtr &msg)
+  void detectAndPublishTags(const sensor_msgs::ImageConstPtr &msg)
   {
     try
     {
@@ -102,9 +78,10 @@ public:
 
       if(detections.size() > 0)
       {
+        detection_context_.time_and_place = msg->header;
         april_tag::AprilTagList tag_list;
         std::transform(detections.begin(), detections.end(), std::back_inserter(tag_list.april_tags),
-                       std::bind(&AprilTagNode::convertToMsg, this, std::placeholders::_1, msg));
+                       std::bind(april_tag::tagDetectionToMsg, std::placeholders::_1, detection_context_));
         tag_list_pub_.publish(tag_list);
       }
     }
@@ -113,6 +90,13 @@ public:
       ROS_ERROR("%s", e.what());
     }
   }
+
+private:
+  april_tag::DetectionContext detection_context_;
+  april_tag::DetectTagsInROSImage detect_tags_;
+  image_transport::Subscriber image_sub_;
+  image_transport::ImageTransport it_;
+  ros::Publisher tag_list_pub_;
 };
 
 int main(int argc, char** argv)
