@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     auto camera_info = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_ns + "/camera_info", nh);
     if(!camera_info)
     {
-      ROS_INFO("Interrupted by node shutdown.");
+      ROS_INFO("Interrupted by node shutdown");
       exit(0);
     }
     if(std::all_of(camera_info->K.begin(), camera_info->K.end(), [](double k) { return k == 0;}))

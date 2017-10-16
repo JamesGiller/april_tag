@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   image_transport
   message_generation
+  nodelet
   roscpp
   sensor_msgs
   tf
@@ -103,28 +104,37 @@ target_link_libraries(AprilTags
 )
 
 ## Declare a cpp library
-add_library(april_tag_ros
+add_library(${PROJECT_NAME}_ros
   src/detect_tags_in_ros_image.cpp
   src/tag_detection_to_msg.cpp
   src/tag_publisher.cpp
 )
 
-target_link_libraries(april_tag_ros
-    AprilTags
-    ${catkin_LIBRARIES}
-    ${EIGEN3_LIBRARIES}
+target_link_libraries(${PROJECT_NAME}_ros
+  AprilTags
+  ${catkin_LIBRARIES}
+  ${EIGEN3_LIBRARIES}
+)
+
+add_library(${PROJECT_NAME}_nodelet src/april_tag_nodelet.cpp)
+
+target_link_libraries(${PROJECT_NAME}_nodelet
+  AprilTags
+  april_tag_ros
+  ${catkin_LIBRARIES}
+  ${EIGEN3_LIBRARIES}
 )
 
 ## Declare a cpp executable
 
-add_executable(april_tag_node src/april_tag_node.cpp)
+add_executable(${PROJECT_NAME}_node src/april_tag_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(april_tag_node april_tag_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(april_tag_node
+target_link_libraries(${PROJECT_NAME}_node
   AprilTags
   april_tag_ros
   ${catkin_LIBRARIES}
@@ -134,7 +144,31 @@ target_link_libraries(april_tag_node
 #############
 ## Install ##
 #############
+install(TARGETS AprilTags ${PROJECT_NAME}_ros ${PROJECT_NAME}_node ${PROJECT_NAME}_nodelet
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
 
+# Copy xml files
+install(FILES package.xml nodelet_plugins.xml
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+## Copy launch files
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  FILES_MATCHING PATTERN "*.launch"
+)
+
+install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+   FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+)
+
+install(DIRECTORY include/AprilTags/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+   FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+)
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
