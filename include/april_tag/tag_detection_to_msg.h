@@ -4,7 +4,6 @@
 #define APRIL_TAG_TAG_DETECTION_TO_MSG_H
 
 #include <sensor_msgs/CameraInfo.h>
-#include <std_msgs/Header.h>
 
 #include "april_tag/AprilTag.h"
 #include "AprilTags/TagDetection.h"
@@ -42,7 +41,7 @@ struct DetectionContext
   /**
    * @brief use a CameraInfo msg to set all four values
    *
-   * Convenient because sensor_msgs/CameraInfo only describes contents of intrinsic camera matrix msg file comments
+   * Convenient because sensor_msgs/CameraInfo only describes contents of intrinsic camera matrix in msg file comments
    * @param camera_info
    */
   inline void setIntrinsicsFromCameraInfo(const sensor_msgs::CameraInfo &camera_info)

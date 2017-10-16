@@ -1,3 +1,5 @@
+/** \author James Giller */
+
 #ifndef APRIL_TAG_APRIL_TAG_NODELET_H
 #define APRIL_TAG_APRIL_TAG_NODELET_H
 

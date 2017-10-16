@@ -13,20 +13,34 @@
 
 namespace april_tag
 {
+/**
+ * @brief Subscribes to a sensor_msgs/Image topic and publishes information when tags are detected in images
+ */
 class TagPublisher
 {
 public:
-  using ErrorCallback = std::function<void(std::string what)>;
+  using LoggingCallback = std::function<void(std::string what)>;
+
+  /**
+   * @brief Aggregates functions to log messages at different levels
+   */
+  struct Loggers
+  {
+    LoggingCallback log_info;
+    LoggingCallback log_warn;
+    LoggingCallback log_error;
+  };
+
   /**
    * @brief this will subscribe to 'camera/image_raw' topic and publish detected tags to '/april_tags'
    *
-   *        You should remap these topic names.
+   *        You should remap these topic names if necessary.
    * @param nh
+   * @param private_nh
    * @param tag_codes family of tags that should be detected
-   * @param base_context all members should be initialized except DetectionContext::time_and_place
+   * @param loggers logging functions to use
    */
-  TagPublisher(ros::NodeHandle &nh, const AprilTags::TagCodes &tag_codes, DetectionContext base_context,
-               ErrorCallback on_error);
+  TagPublisher(ros::NodeHandle &nh, ros::NodeHandle &private_nh, const AprilTags::TagCodes &tag_codes, Loggers loggers);
 
 private:
   void detectAndPublishTags_(const sensor_msgs::ImageConstPtr &msg);
@@ -36,7 +50,7 @@ private:
   image_transport::ImageTransport it_;
   ros::Publisher tag_list_pub_;
   image_transport::Subscriber image_sub_;
-  ErrorCallback on_error_;
+  Loggers loggers_;
 };
 }
 

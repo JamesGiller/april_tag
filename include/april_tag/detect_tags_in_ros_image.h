@@ -16,7 +16,7 @@ class DetectTagsInROSImage
 {
 public:
   /**
-   * @brief this will detect tags in the given tag family
+   * @brief this will detect tags of the given tag family
    * @param tagCodes
    */
   DetectTagsInROSImage(const AprilTags::TagCodes &tagCodes);
