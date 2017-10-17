@@ -9,7 +9,7 @@
 #include <ros/timer.h>
 #include <sensor_msgs/CameraInfo.h>
 
-#include "april_tag/tag_publisher.h"
+#include "april_tag_ros/tag_publisher.h"
 
 namespace april_tag
 {

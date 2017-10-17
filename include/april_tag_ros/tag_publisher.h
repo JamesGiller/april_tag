@@ -7,8 +7,8 @@
 #include <image_transport/image_transport.h>
 #include <ros/node_handle.h>
 
-#include "april_tag/detect_tags_in_ros_image.h"
-#include "april_tag/tag_detection_to_msg.h"
+#include "april_tag_ros/detect_tags_in_ros_image.h"
+#include "april_tag_ros/tag_detection_to_msg.h"
 #include "april_tag/AprilTagList.h"
 
 namespace april_tag
@@ -32,9 +32,8 @@ public:
   };
 
   /**
-   * @brief this will subscribe to 'camera/image_raw' topic and publish detected tags to '/april_tags'
+   * @brief this will publish detected tags to '/april_tags'
    *
-   *        You should remap these topic names if necessary.
    * @param nh
    * @param private_nh
    * @param tag_codes family of tags that should be detected

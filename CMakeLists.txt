@@ -110,6 +110,10 @@ add_library(${PROJECT_NAME}_ros
   src/tag_publisher.cpp
 )
 
+## Add cmake target dependencies of the executable/library
+## as an example, message headers may need to be generated before nodes
+add_dependencies(${PROJECT_NAME}_ros april_tag_generate_messages_cpp)
+
 target_link_libraries(${PROJECT_NAME}_ros
   AprilTags
   ${catkin_LIBRARIES}
@@ -128,10 +132,6 @@ target_link_libraries(${PROJECT_NAME}_nodelet
 ## Declare a cpp executable
 
 add_executable(${PROJECT_NAME}_node src/april_tag_node.cpp)
-
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-add_dependencies(april_tag_node april_tag_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
@@ -160,7 +160,7 @@ install(DIRECTORY launch/
   FILES_MATCHING PATTERN "*.launch"
 )
 
-install(DIRECTORY include/${PROJECT_NAME}/
+install(DIRECTORY include/${PROJECT_NAME}_ros/
    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 )

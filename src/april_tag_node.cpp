@@ -4,7 +4,7 @@
 
 #include <ros/ros.h>
 
-#include "april_tag/tag_publisher.h"
+#include "april_tag_ros/tag_publisher.h"
 #include "AprilTags/Tag36h11.h"
 
 int main(int argc, char** argv)

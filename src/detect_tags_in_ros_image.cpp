@@ -1,7 +1,7 @@
 /** \author James Giller */
 /** \author palash */
 
-#include "april_tag/detect_tags_in_ros_image.h"
+#include "april_tag_ros/detect_tags_in_ros_image.h"
 
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>

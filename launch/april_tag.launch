@@ -10,7 +10,6 @@
 
   <param name="tag_size_cm" value="$(arg tag_size_cm)" /> 
     <node pkg="april_tag" name="april_tag_node" type="april_tag_node" output="screen">
-      <remap from="/camera/image_raw" to="$(arg camera_ns)/image_raw" />
       <param name="camera_ns" value="$(arg camera_ns)" />
 
       <param name="focal_length_x_px" value="$(arg focal_length_x_px)" />

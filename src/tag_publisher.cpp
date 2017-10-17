@@ -1,7 +1,7 @@
 /** \author James Giller */
 /** \author palash */
 
-#include "april_tag/tag_publisher.h"
+#include "april_tag_ros/tag_publisher.h"
 
 #include <algorithm>
 #include <iterator>

@@ -1,7 +1,7 @@
 //
 // adapted from ros example and april tag examples - palash
 //
-#include "april_tag/april_tag_nodelet.h"
+#include "april_tag_ros/april_tag_nodelet.h"
 
 #include <pluginlib/class_list_macros.h>
 #include <ros/ros.h>
