@@ -27,7 +27,7 @@ http://people.csail.mit.edu/kaess/apriltags/
 - principal\_point\_x\_px: x-coordinate of camera principal point
 - principal\_point\_y\_px: y-coordinate of camera principal point
 
-Missing optional arguments are fetched from `sensor_msgs/CameraInfo` messages published on the `$(arg camera_ns/camera_info` topic.
+Missing optional arguments are fetched from `sensor_msgs/CameraInfo` messages published on the `$(arg camera_ns)/camera_info` topic.
 
 ## Input
 
