@@ -6,7 +6,6 @@
 
   <arg name="camera_ns" doc="namespace in which camera's image_raw topic exists e.g. /usb_cam" />
   <arg name="tag_size_cm" doc="length of the edge of the black frame in cms" />
-  <arg name="show_debug_image" default="false" />
 
   <param name="tag_size_cm" value="$(arg tag_size_cm)" /> 
     <node pkg="april_tag" name="april_tag_node" type="april_tag_node" output="screen">
@@ -16,7 +15,5 @@
       <param name="focal_length_y_px" value="$(arg focal_length_y_px)" />
       <param name="principal_point_x_px" value="$(arg principal_point_x_px)" />
       <param name="principal_point_y_px" value="$(arg principal_point_y_px)" />
-
-      <param name="show_debug_image" value="$(arg show_debug_image)" />
     </node>
 </launch>
