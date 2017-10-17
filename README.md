@@ -1,19 +1,39 @@
 april_tag
 =========
 
-Detects 2D fiducial markers (april tags) from ros image stream and produces id, location and orientation of the tags. This ros node wraps the C++ April Tag library written by Michael Kaess and Hordur Johannson. April tags were developed by Edwin Olson. 
+Detects 'AprilTag' 2D fiducial markers in ROS images (`sensor_msgs/Image`) and produces id, location, and orientation of the tags. Functionality is also provided as a Nodelet.
+
+This package uses the C++ AprilTags library written by Michael Kaess and Hordur Johannson. The AprilTags Visual Fiducial System was developed by Edwin Olson.
 
 More on april tags here:
-http://april.eecs.umich.edu/wiki/index.php/AprilTags
+https://april.eecs.umich.edu/software/apriltag.html
 
 April Tags C++ library:
 http://people.csail.mit.edu/kaess/apriltags/
 
-Input:
+## Launchfiles
 
-`/camera/image_raw`
+- april\_tag.launch
+- nodelet.launch
 
-Output:
+### Required arguments
+- camera\_ns: namespace in which camera's image\_raw topic exists e.g. /usb\_cam
+- tag\_size\_cm: length of the edge of the black frame in cms
+- manager: name of nodelet manager (_nodelet only_)
+
+### Optional arguments
+- focal\_length\_x\_px: camera focal length in x dimension in pixels
+- focal\_length\_y\_px: camera focal length in y dimension in pixels
+- principal\_point\_x\_px: x-coordinate of camera principal point
+- principal\_point\_y\_px: y-coordinate of camera principal point
+
+Missing optional arguments are fetched from `sensor_msgs/CameraInfo` messages published on the `$(arg camera_ns/camera_info` topic.
+
+## Input
+
+`$(arg camera_ns)/image_raw`
+
+## Output
 
 AprilTagList which is a list of AprilTag:
 
@@ -21,19 +41,14 @@ AprilTagList which is a list of AprilTag:
 uint32 	id
 uint32 	hamming_distance
 float64 distance
-float64 x
-float64 y
-float64 z
-float64 yaw
-float64 pitch
-float64 roll
+geometry_msgs/PoseStamped stamped
 ```
 
-distance,x,y,z are in cms. z is depth away from camera. x is horizontal with camera right as positive. 
+where hamming\_distance indicates difference between the observed tag and the identified tag, and distance is depth away from camera. x is horizontal with camera right as positive. 
 
 Depends on: libeigen3-dev
 
--- palash
+-- James Giller
 
 
 
