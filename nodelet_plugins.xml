@@ -1,0 +1,7 @@
+<library path="lib/libapril_tag_nodelet">
+    <class name="april_tag/AprilTagNodelet"
+           type="april_tag::AprilTagNodelet"
+           base_class_type="nodelet::Nodelet">
+      <description> Subscribes to a sensor_msgs/Image topic and publishes information on tags detected in images.</description>
+    </class>
+</library>
