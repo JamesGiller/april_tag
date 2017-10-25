@@ -20,7 +20,6 @@ public:
 
 private:
   std::unique_ptr<TagPublisher> tag_publisher_;
-  ros::Timer initialization_thread_;
 };
 }
 #endif // APRIL_TAG_APRIL_TAG_NODELET_H

@@ -64,8 +64,7 @@ AprilTag tagDetectionToMsg(const AprilTags::TagDetection &detection, const Detec
   tag_msg.id = detection.id;
   tag_msg.hamming_distance = detection.hammingDistance;
   tag_msg.distance = translation.norm();
-  tag_msg.stamped.header.stamp = context.time_and_place.stamp;
-  tag_msg.stamped.header.frame_id = context.time_and_place.frame_id;
+  tag_msg.stamped.header = context.time_and_place;
   tag_msg.stamped.pose.position.x = translation(0);
   tag_msg.stamped.pose.position.y = translation(1);
   tag_msg.stamped.pose.position.z = translation(2);
