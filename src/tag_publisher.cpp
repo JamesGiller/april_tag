@@ -27,9 +27,14 @@ TagPublisher::TagPublisher(ros::NodeHandle &nh, ros::NodeHandle &private_nh, con
   detection_context_.tag_size_m = tag_size_cm / 100.0;
 
   std::string camera_ns;
+  std::string image_topic;
   if(!private_nh.getParam("camera_ns", camera_ns))
   {
     throw std::runtime_error{"Parameter 'camera_ns' is required but not set"};
+  }
+  if(!private_nh.getParam("image_topic", image_topic))
+  {
+    throw std::runtime_error{"Parameter 'image_topic' is required but not set"};
   }
 
   double fx, fy, cx, cy;
@@ -60,7 +65,7 @@ TagPublisher::TagPublisher(ros::NodeHandle &nh, ros::NodeHandle &private_nh, con
   }
 
   tag_list_pub_ = nh.advertise<AprilTagList>("/april_tags", 100);
-  image_sub_ = it_.subscribe(camera_ns + "/image_raw", 1, &TagPublisher::detectAndPublishTags_, this);
+  image_sub_ = it_.subscribe(camera_ns + image_topic, 1, &TagPublisher::detectAndPublishTags_, this);
 }
 
 void TagPublisher::detectAndPublishTags_(const sensor_msgs::ImageConstPtr &msg)
