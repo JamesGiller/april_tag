@@ -27,6 +27,10 @@ void AprilTagNodelet::onInit()
     try
     {
       tag_publisher_.reset(new TagPublisher(nh, private_nh, AprilTags::tagCodes36h11, std::move(loggers)));
+      if(private_nh.param<bool>("publish_visualization_markers", false))
+      {
+        visualize_tags_.reset(new april_tag::VisualizeTags(nh));
+      }
     }
     catch(const std::runtime_error &e)
     {

@@ -6,11 +6,12 @@
 #include <algorithm>
 #include <iterator>
 
+#include <visualization_msgs/MarkerArray.h>
+
 #include <boost/format.hpp>
 
 namespace april_tag
 {
-
 TagPublisher::TagPublisher(ros::NodeHandle &nh, ros::NodeHandle &private_nh, const AprilTags::TagCodes &tag_codes,
                            TagPublisher::Loggers loggers) :
   detect_tags_{tag_codes},
