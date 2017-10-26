@@ -4,6 +4,8 @@
   <arg name="principal_point_x_px" default="" />
   <arg name="principal_point_y_px" default="" />
 
+  <arg name="publish_visualization_markers" default="false" />
+
   <arg name="camera_ns" doc="namespace in which camera's image_raw topic exists e.g. /usb_cam" />
   <arg name="image_topic" default="/image_raw" />
   <arg name="tag_size_cm" doc="length of the edge of the black frame in cms" />
@@ -17,5 +19,7 @@
       <param name="focal_length_y_px" value="$(arg focal_length_y_px)" />
       <param name="principal_point_x_px" value="$(arg principal_point_x_px)" />
       <param name="principal_point_y_px" value="$(arg principal_point_y_px)" />
+
+      <param name="publish_visualization_markers" value="$(arg publish_visualization_markers)" />
     </node>
 </launch>
