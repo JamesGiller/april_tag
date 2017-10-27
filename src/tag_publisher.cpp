@@ -6,8 +6,6 @@
 #include <algorithm>
 #include <iterator>
 
-#include <visualization_msgs/MarkerArray.h>
-
 #include <boost/format.hpp>
 
 namespace april_tag
