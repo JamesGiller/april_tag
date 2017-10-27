@@ -22,6 +22,7 @@ http://people.csail.mit.edu/kaess/apriltags/
 - manager: name of nodelet manager (_nodelet only_)
 
 ### Optional arguments
+- publish\_visualization\_markers: set to true if you are running RViz and would like to see detected tags
 - focal\_length\_x\_px: camera focal length in x dimension in pixels
 - focal\_length\_y\_px: camera focal length in y dimension in pixels
 - principal\_point\_x\_px: x-coordinate of camera principal point
