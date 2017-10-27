@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   tf
+  visualization_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -108,6 +109,7 @@ add_library(${PROJECT_NAME}_ros
   src/detect_tags_in_ros_image.cpp
   src/tag_detection_to_msg.cpp
   src/tag_publisher.cpp
+  src/visualize_tags.cpp
 )
 
 ## Add cmake target dependencies of the executable/library

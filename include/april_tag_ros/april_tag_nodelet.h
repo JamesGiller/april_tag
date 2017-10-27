@@ -10,6 +10,7 @@
 #include <sensor_msgs/CameraInfo.h>
 
 #include "april_tag_ros/tag_publisher.h"
+#include "april_tag_ros/visualize_tags.h"
 
 namespace april_tag
 {
@@ -20,6 +21,7 @@ public:
 
 private:
   std::unique_ptr<TagPublisher> tag_publisher_;
+  std::unique_ptr<VisualizeTags> visualize_tags_;
   ros::Timer initialization_thread_;
 };
 }

@@ -10,7 +10,6 @@
 
 namespace april_tag
 {
-
 TagPublisher::TagPublisher(ros::NodeHandle &nh, ros::NodeHandle &private_nh, const AprilTags::TagCodes &tag_codes,
                            TagPublisher::Loggers loggers) :
   detect_tags_{tag_codes},
@@ -77,8 +76,8 @@ void TagPublisher::detectAndPublishTags_(const sensor_msgs::ImageConstPtr &msg)
     if(detections.size() > 0)
     {
       detection_context_.time_and_place = msg->header;
-      AprilTagList tag_list;
-      std::transform(detections.begin(), detections.end(), std::back_inserter(tag_list.april_tags),
+      AprilTagListPtr tag_list{new AprilTagList};
+      std::transform(detections.begin(), detections.end(), std::back_inserter(tag_list->april_tags),
                      std::bind(tagDetectionToMsg, std::placeholders::_1, detection_context_));
       tag_list_pub_.publish(tag_list);
     }
