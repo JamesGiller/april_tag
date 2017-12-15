@@ -24,6 +24,7 @@ if(NOT EIGEN3_INCLUDE_DIRS)
   set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
 endif()
 
+find_package(OpenCV REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -120,6 +121,7 @@ target_link_libraries(${PROJECT_NAME}_ros
   AprilTags
   ${catkin_LIBRARIES}
   ${EIGEN3_LIBRARIES}
+  ${OpenCV_LIBS}
 )
 
 add_library(${PROJECT_NAME}_nodelet src/april_tag_nodelet.cpp)
